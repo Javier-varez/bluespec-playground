@@ -16,8 +16,8 @@ module top (
 
   // Bluespec top module
   mkTop mkTop (
-    .rst(1),
-    .clk(clk_bufg),
+    .RST_N(1),
+    .CLK(clk_bufg),
     .led(led)
   );
 

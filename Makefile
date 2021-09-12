@@ -1,4 +1,6 @@
 
+THIS_FILE := $(firstword $(MAKEFILE_LIST))
+
 # Directories
 CURRENT_DIR := $(PWD)
 SOURCE_DIR := src
@@ -13,54 +15,65 @@ DEVICE := xc7z010_test
 PARTNAME := xc7z010clg400-1
 
 # bitfile name
+BLUESPEC_TOP_MODULE := mkTop
 TOP := top
 BITFILE := $(TARGET_DIR)/$(TOP).bit
 
 # bluespec sources
-BLUESPEC_TOP_FILE := ATE.bsv
-BLUESPEC_TOP_MODULE := mkTop
+BLUESPEC_FILES := \
+    Top.bsv \
+    Utils.bsv \
+    Zybo.bsv
 
-VERILOG_SOURCES := $(SOURCE_DIR)/top.v
+VERILOG_SOURCES := $(SOURCE_DIR)/$(TOP).v
 
 # XDC
 XDC_FILE := zybo.xdc
 
-# Find verilog sources
-VERILOG_SOURCES += $(addprefix $(VERILOG_DIR)/, $(addsuffix .v, $(BLUESPEC_TOP_MODULE)))
+GREEN_BOLD := \e[32;1m
+RESET_COLOR := \e[39;0m
 
-all: $(BITFILE)
+all: $(BITFILE) $(THIS_FILE)
 
-$(VERILOG_DIR)/$(BLUESPEC_TOP_MODULE).v: $(SOURCE_DIR)/$(BLUESPEC_TOP_FILE)
+$(VERILOG_DIR)/$(BLUESPEC_TOP_MODULE).v: $(addprefix $(SOURCE_DIR)/, $(BLUESPEC_FILES)) $(THIS_FILE)
+	@echo "[$(GREEN_BOLD)Building BSV sources$(RESET_COLOR)]"
 	@mkdir -p $(BLUESPEC_OUT_DIR)
 	@mkdir -p $(dir $@)
-	bsc -bdir $(BLUESPEC_OUT_DIR) -vdir $(dir $@) -verilog $^
+	@bsc -bdir $(BLUESPEC_OUT_DIR) -vdir $(VERILOG_DIR) -u -verilog -p $(SOURCE_DIR):%/Libraries $<
 
-$(SYMBIFLOW_DIR)/$(TOP).eblif: $(VERILOG_SOURCES)
+$(SYMBIFLOW_DIR)/$(TOP).eblif: $(VERILOG_DIR)/$(BLUESPEC_TOP_MODULE).v $(THIS_FILE)
+	@echo "[$(GREEN_BOLD)Running Synthesys$(RESET_COLOR)]"
 	@mkdir -p $(SYMBIFLOW_DIR)
-	cd $(SYMBIFLOW_DIR) && symbiflow_synth -t top -v $(addprefix $(CURRENT_DIR)/, $(VERILOG_SOURCES)) -d $(BITSTREAM_DEVICE) -p $(PARTNAME) -x $(CURRENT_DIR)/$(XDC_FILE) 2>&1 > /dev/null
+	@cd $(SYMBIFLOW_DIR) && symbiflow_synth -t top -v $(addprefix $(CURRENT_DIR)/, $(VERILOG_SOURCES) $(wildcard $(VERILOG_DIR)/*.v)) -d $(BITSTREAM_DEVICE) -p $(PARTNAME) -x $(CURRENT_DIR)/$(XDC_FILE) 2>&1 > /dev/null
 
-$(SYMBIFLOW_DIR)/$(TOP).net: $(SYMBIFLOW_DIR)/$(TOP).eblif
-	cd ${SYMBIFLOW_DIR} && symbiflow_pack -e ${TOP}.eblif -d ${DEVICE} ${SDC_CMD} 2>&1 > /dev/null
+$(SYMBIFLOW_DIR)/$(TOP).net: $(SYMBIFLOW_DIR)/$(TOP).eblif $(THIS_FILE)
+	@echo "[$(GREEN_BOLD)Pack netlist$(RESET_COLOR)]"
+	@cd ${SYMBIFLOW_DIR} && symbiflow_pack -e ${TOP}.eblif -d ${DEVICE} ${SDC_CMD} 2>&1 > /dev/null
 
-$(SYMBIFLOW_DIR)/$(TOP).place: $(SYMBIFLOW_DIR)/$(TOP).net
-	cd $(SYMBIFLOW_DIR) && symbiflow_place -e $(TOP).eblif -d $(DEVICE) $(PCF_CMD) -n $(TOP).net -P $(PARTNAME) $(SDC_CMD) 2>&1 > /dev/null
+$(SYMBIFLOW_DIR)/$(TOP).place: $(SYMBIFLOW_DIR)/$(TOP).net $(THIS_FILE)
+	@echo "[$(GREEN_BOLD)Runnig place$(RESET_COLOR)]"
+	@cd $(SYMBIFLOW_DIR) && symbiflow_place -e $(TOP).eblif -d $(DEVICE) $(PCF_CMD) -n $(TOP).net -P $(PARTNAME) $(SDC_CMD) 2>&1 > /dev/null
 
-$(SYMBIFLOW_DIR)/$(TOP).route: $(SYMBIFLOW_DIR)/$(TOP).place
-	cd $(SYMBIFLOW_DIR) && symbiflow_route -e $(TOP).eblif -d $(DEVICE) $(SDC_CMD) 2>&1 > /dev/null
+$(SYMBIFLOW_DIR)/$(TOP).route: $(SYMBIFLOW_DIR)/$(TOP).place $(THIS_FILE)
+	@echo "[$(GREEN_BOLD)Runnig route$(RESET_COLOR)]"
+	@cd $(SYMBIFLOW_DIR) && symbiflow_route -e $(TOP).eblif -d $(DEVICE) $(SDC_CMD) 2>&1 > /dev/null
 
-$(SYMBIFLOW_DIR)/$(TOP).fasm: $(SYMBIFLOW_DIR)/$(TOP).route
-	cd $(SYMBIFLOW_DIR) && symbiflow_write_fasm -e $(TOP).eblif -d $(DEVICE)
+$(SYMBIFLOW_DIR)/$(TOP).fasm: $(SYMBIFLOW_DIR)/$(TOP).route $(THIS_FILE)
+	@echo "[$(GREEN_BOLD)Generating fasm$(RESET_COLOR)]"
+	@cd $(SYMBIFLOW_DIR) && symbiflow_write_fasm -e $(TOP).eblif -d $(DEVICE) 2>&1 > /dev/null
 
-$(SYMBIFLOW_DIR)/$(TOP).bit: $(SYMBIFLOW_DIR)/$(TOP).fasm
-	cd $(SYMBIFLOW_DIR) && symbiflow_write_bitstream -d $(BITSTREAM_DEVICE) -f $(TOP).fasm -p $(PARTNAME) -b $(TOP).bit
+$(SYMBIFLOW_DIR)/$(TOP).bit: $(SYMBIFLOW_DIR)/$(TOP).fasm $(THIS_FILE)
+	@echo "[$(GREEN_BOLD)Generating bitstream$(RESET_COLOR)]"
+	@cd $(SYMBIFLOW_DIR) && symbiflow_write_bitstream -d $(BITSTREAM_DEVICE) -f $(TOP).fasm -p $(PARTNAME) -b $(TOP).bit 2>&1 > /dev/null
 
 $(BITFILE): $(SYMBIFLOW_DIR)/$(TOP).bit
 	@cp $^ $@
 
 flash: $(BITFILE)
-	vivado -mode batch -source flash.tcl -nojournal -nolog
+	@echo "[$(GREEN_BOLD)Flashing board$(RESET_COLOR)]"
+	@vivado -mode batch -source flash.tcl -nojournal -nolog
 
 clean:
-	rm -r $(TARGET_DIR)
+	@rm -r $(TARGET_DIR)
 
 .PHONY: flash
