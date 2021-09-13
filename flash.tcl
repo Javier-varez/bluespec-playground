@@ -1,5 +1,7 @@
 
-set bitfile [pwd]/build/top.bit
+set bitfile [lindex $argv 0]
+
+puts $bitfile
 
 open_hw_manager
 connect_hw_server -allow_non_jtag
