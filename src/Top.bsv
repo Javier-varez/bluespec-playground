@@ -12,6 +12,9 @@ module mkTop(Ifc_Top);
         let packed_count = pack(count);
         return packed_count[27:24];
     endmethod
+
+    method Action buttons(Bit#(4) btn);
+    endmethod
 endmodule
 
 endpackage

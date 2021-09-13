@@ -17,5 +17,4 @@ module mkCounter(Ifc_Counter#(size));
 
 endmodule
 
-
 endpackage

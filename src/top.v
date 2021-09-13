@@ -1,6 +1,7 @@
 module top (
     input wire clk,
-    output wire [3:0] led
+    output wire [3:0] led,
+    input wire [3:0] btn
 );
 
   wire clk_bufg;
@@ -18,7 +19,8 @@ module top (
   mkTop mkTop (
     .RST_N(1),
     .CLK(clk_bufg),
-    .led(led)
+    .led(led),
+    .btn(btn)
   );
 
 endmodule
