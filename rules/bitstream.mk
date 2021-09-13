@@ -101,6 +101,9 @@ flash_$(LOCAL_NAME): $(_BITSTREAM)
 	@echo "[$(_GREEN_BOLD)Flashing board -> $(NAME).bit$(_RESET_COLOR)]"
 	@vivado -mode batch -source flash.tcl -nojournal -nolog -tclargs $<
 
+bsv_$(LOCAL_NAME): $(_BLUESPEC_DUMMY_MARKER)
+.PHONY: bsv_$(LOCAL_NAME)
+
 .PHONY: flash_$(LOCAL_NAME)
 
 _ALL_TARGETS += $(_BITSTREAM)
