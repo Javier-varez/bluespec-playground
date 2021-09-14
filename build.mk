@@ -11,8 +11,9 @@ LOCAL_PARTNAME := xc7z010clg400-1
 LOCAL_SRC_DIR := src
 
 LOCAL_BSV_SRC := \
-    Cpu.bsv \
-    Types.bsv \
+    Top.bsv \
+    Utils.bsv \
+    Zybo.bsv
 
 LOCAL_V_SRC := \
     top.v
@@ -27,6 +28,7 @@ LOCAL_NAME := cpu_tests
 LOCAL_SRC_DIR := src
 LOCAL_BSV_SRC := \
     Cpu.bsv \
+    CpuMemory.bsv \
     Types.bsv
 
 LOCAL_BSV_TB := \

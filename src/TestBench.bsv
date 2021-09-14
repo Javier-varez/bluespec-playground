@@ -28,7 +28,6 @@ module mkTestBench (Empty);
     Reg#(Status) status <- mkReg(WriteReg);
 
     rule rl_write_reg if (status == WriteReg);
-        $display("Tests passed!");
         dynamicAssert(reg_file.read_port1(0) == 'h0, "Initial value is not correct");
         dynamicAssert(reg_file.read_port2(0) == 'h0, "Initial value is not correct");
 
@@ -45,6 +44,7 @@ module mkTestBench (Empty);
         dynamicAssert(reg_file.read_port1(1) == 123, "Reg 1 was not written");
         dynamicAssert(reg_file.read_port2(1) == 123, "Reg 1 was not written");
 
+        $display("Tests done!");
         $finish;
     endrule
 endmodule
