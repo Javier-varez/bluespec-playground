@@ -21,7 +21,11 @@ function Word alu(Word rs1, Word rs2, AluOp op);
             end
         Xor: return rs1 ^ rs2;
         Srl: return zeroExtend(rs1 >> rs2);
-        Sra: return signExtend(rs1 >> rs2);
+        Sra:
+            begin
+                Int#(32) signed_rs1 = unpack(rs1);
+                return pack(signed_rs1 >> rs2);
+            end
         Or: return rs1 | rs2;
         And: return rs1 & rs2;
     endcase

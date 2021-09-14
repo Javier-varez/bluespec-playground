@@ -26,9 +26,8 @@ LOCAL_NAME := cpu_tests
 
 LOCAL_SRC_DIR := src
 LOCAL_BSV_SRC := \
-    Top.bsv \
-    Utils.bsv \
-    Zybo.bsv
+    Cpu.bsv \
+    Types.bsv
 
 LOCAL_BSV_TB := \
     TestBench.bsv
