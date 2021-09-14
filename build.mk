@@ -11,9 +11,8 @@ LOCAL_PARTNAME := xc7z010clg400-1
 LOCAL_SRC_DIR := src
 
 LOCAL_BSV_SRC := \
-    Top.bsv \
-    Utils.bsv \
-    Zybo.bsv
+    Cpu.bsv \
+    Types.bsv \
 
 LOCAL_V_SRC := \
     top.v
