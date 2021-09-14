@@ -21,3 +21,17 @@ LOCAL_V_SRC := \
 LOCAL_XDC := zybo.xdc
 
 include $(BUILD_BITSTREAM)
+
+include $(CLEAR_VARS)
+LOCAL_NAME := cpu_tests
+
+LOCAL_SRC_DIR := src
+LOCAL_BSV_SRC := \
+    Top.bsv \
+    Utils.bsv \
+    Zybo.bsv
+
+LOCAL_BSV_TB := \
+    TestBench.bsv
+
+include $(BUILD_BLUESIM_TEST)
