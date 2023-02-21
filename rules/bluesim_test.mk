@@ -32,7 +32,7 @@ $(_BLUESIM_TEST): GEN_SIMULATION_DIR := $(_GEN_SIMULATION_DIR)
 $(_BLUESIM_TEST): SRC_DIR := $(LOCAL_SRC_DIR)
 $(_BLUESIM_TEST): TESTBENCH_MODULE := $(_TESTBENCH_MODULE)
 $(_BLUESIM_TEST): $(LOCAL_SRC_DIR)/$(LOCAL_BSV_TB) $(addprefix $(LOCAL_SRC_DIR)/, $(LOCAL_BSV_SRC)) $(_GEN_BLUESPEC_DIR) $(_GEN_SIMULATION_DIR) $(THIS_FILE)
-	@echo "[$(_GREEN_BOLD)Building BSV test$(_RESET_COLOR)]"
+	@echo -e "[$(_GREEN_BOLD)Building BSV test$(_RESET_COLOR)]"
 	@bsc -u -sim -simdir $(GEN_SIMULATION_DIR) -bdir $(GEN_BLUESPEC_DIR) -info-dir $(GEN_BLUESPEC_DIR) -keep-fires -aggressive-conditions -check-assert -g $(TESTBENCH_MODULE) -p $(SRC_DIR):%/Libraries $<
 	@bsc -e $(TESTBENCH_MODULE) -sim -o $@ -simdir $(GEN_SIMULATION_DIR) -bdir $(GEN_BLUESPEC_DIR) -info-dir $(GEN_BLUESPEC_DIR) -keep-fires -aggressive-conditions -check-assert -g $(TESTBENCH_MODULE) -p $(SRC_DIR):%/Libraries
 
@@ -42,7 +42,7 @@ $(LOCAL_NAME): $(_BLUESIM_TEST)
 
 run_$(LOCAL_NAME): NAME := $(LOCAL_NAME)
 run_$(LOCAL_NAME): $(_BLUESIM_TEST)
-	@echo "[$(_GREEN_BOLD)Running BSV test -> $(NAME)$(_RESET_COLOR)]"
+	@echo -e "[$(_GREEN_BOLD)Running BSV test -> $(NAME)$(_RESET_COLOR)]"
 	@$<
 .PHONY: run_$(LOCAL_NAME)
 

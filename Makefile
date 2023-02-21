@@ -1,4 +1,3 @@
-
 _THIS_FILE := $(firstword $(MAKEFILE_LIST))
 
 # Directories
