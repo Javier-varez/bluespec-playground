@@ -58,4 +58,20 @@ function Word alu(Word rs1, Word rs2, AluOp op);
     endcase
 endfunction
 
+interface ProgramCounter;
+    method Address read();
+    method Action write(Address address);
+endinterface
+
+module mkProgramCounter(ProgramCounter);
+    // TODO: Should change the start address?
+    Reg#(Address) addr <- mkReg(0);
+
+    method Address read() = addr;
+
+    method Action write(Address new_address);
+        addr <= new_address;
+    endmethod
+endmodule
+
 endpackage

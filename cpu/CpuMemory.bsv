@@ -1,4 +1,3 @@
-
 package CpuMemory;
 
 import Assert::*;

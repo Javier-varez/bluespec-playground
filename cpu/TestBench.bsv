@@ -3,6 +3,7 @@ package TestBench;
 import Assert::*;
 import Cpu::*;
 import Types::*;
+import CpuMemory::*;
 
 typedef enum { ReadReg, WriteReg } Status deriving(Eq, Bits);
 
@@ -27,6 +28,10 @@ module mkTestBench (Empty);
     RegFile#(32, Word, RegIndex) reg_file <- mkRegFile();
     Reg#(Status) status <- mkReg(WriteReg);
 
+    Memory#(1024) memory <- mkDistributedMemory();
+
+    ProgramCounter pc <- mkProgramCounter();
+
     rule rl_write_reg if (status == WriteReg);
         dynamicAssert(reg_file.read_port1(0) == 'h0, "Initial value is not correct");
         dynamicAssert(reg_file.read_port2(0) == 'h0, "Initial value is not correct");
@@ -37,6 +42,13 @@ module mkTestBench (Empty);
 
         reg_file.write_port(1, 123);
 
+        let res <- memory.request(MemRequest{ op: Store, address: 0, data: 'h12345678});
+        dynamicAssert(res == 0, "Invalid return value from memory store");
+
+        let pcVal = pc.read();
+        dynamicAssert(pcVal == 0, "Invalid return value from pc");
+        pc.write(pcVal + 1);
+
         status <= ReadReg;
     endrule
 
@@ -44,9 +56,16 @@ module mkTestBench (Empty);
         dynamicAssert(reg_file.read_port1(1) == 123, "Reg 1 was not written");
         dynamicAssert(reg_file.read_port2(1) == 123, "Reg 1 was not written");
 
-        $display("Tests done!");
+        Word res <- memory.request(MemRequest{ op: Load, address: 0, data: 'h0});
+        dynamicAssert(res == 'h12345678, "Memory was not written");
+
+        let pcVal = pc.read();
+        dynamicAssert(pcVal == 1, "Invalid return value from pc");
+
+        $display("Tests done!!");
         $finish;
     endrule
+
 endmodule
 
 endpackage

@@ -1,4 +1,3 @@
-
 LOCAL_DIR := $(call current-dir)
 
 include $(CLEAR_VARS)
@@ -8,7 +7,7 @@ LOCAL_FAMILY := zynq7
 LOCAL_DEVICE := xc7z010_test
 LOCAL_PARTNAME := xc7z010clg400-1
 
-LOCAL_SRC_DIR := src
+LOCAL_SRC_DIR := counter
 
 LOCAL_BSV_SRC := \
     Top.bsv \
@@ -25,7 +24,7 @@ include $(BUILD_BITSTREAM)
 include $(CLEAR_VARS)
 LOCAL_NAME := cpu_tests
 
-LOCAL_SRC_DIR := src
+LOCAL_SRC_DIR := cpu
 LOCAL_BSV_SRC := \
     Cpu.bsv \
     CpuMemory.bsv \
