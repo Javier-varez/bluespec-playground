@@ -29,11 +29,11 @@ $(_BLUESPEC_DUMMY_MARKER): SRC_DIR := $(LOCAL_SRC_DIR)
 $(_BLUESPEC_DUMMY_MARKER): GEN_VERILOG_DIR := $(_GEN_VERILOG_DIR)
 $(_BLUESPEC_DUMMY_MARKER): GEN_BLUESPEC_DIR := $(_GEN_BLUESPEC_DIR)
 $(_BLUESPEC_DUMMY_MARKER): $(addprefix $(LOCAL_SRC_DIR)/, $(LOCAL_BSV_SRC)) $(THIS_FILE)
-	@mkdir -p $(GEN_VERILOG_DIR)
-	@mkdir -p $(GEN_BLUESPEC_DIR)
-	@echo -e "[$(_GREEN_BOLD)Building BSV sources$(_RESET_COLOR)]"
-	@bsc -bdir $(GEN_BLUESPEC_DIR) -vdir $(GEN_VERILOG_DIR) -u -verilog -p $(SRC_DIR):%/Libraries $<
-	@touch $@
+	$(SILENT)mkdir -p $(GEN_VERILOG_DIR)
+	$(SILENT)mkdir -p $(GEN_BLUESPEC_DIR)
+	$(SILENT)echo -e "[$(_GREEN_BOLD)Building BSV sources$(_RESET_COLOR)]"
+	$(SILENT)bsc -bdir $(GEN_BLUESPEC_DIR) -vdir $(GEN_VERILOG_DIR) -u -verilog -p $(SRC_DIR):%/Libraries $<
+	$(SILENT)touch $@
 
 $(_GEN_SYMBIFLOW_DIR)/top.eblif: GEN_SYMBIFLOW_DIR := $(_GEN_SYMBIFLOW_DIR)
 $(_GEN_SYMBIFLOW_DIR)/top.eblif: GEN_VERILOG_DIR := $(_GEN_VERILOG_DIR)
@@ -46,57 +46,57 @@ $(_GEN_SYMBIFLOW_DIR)/top.eblif: SRC_DIR := $(LOCAL_SRC_DIR)
 $(_GEN_SYMBIFLOW_DIR)/top.eblif: V_SRC := $(LOCAL_V_SRC)
 $(_GEN_SYMBIFLOW_DIR)/top.eblif: XDC := $(LOCAL_XDC)
 $(_GEN_SYMBIFLOW_DIR)/top.eblif: $(_BLUESPEC_DUMMY_MARKER) $(THIS_FILE)
-	@mkdir -p $(GEN_SYMBIFLOW_DIR)
-	@echo -e "[$(_GREEN_BOLD)Running Synthesys$(_RESET_COLOR)]"
-	@cd $(GEN_SYMBIFLOW_DIR) && symbiflow_synth -t top -v $(addprefix $(DIR)/$(SRC_DIR)/, $(V_SRC)) $(addprefix $(DIR)/, $(wildcard $(GEN_VERILOG_DIR)/*.v)) -d $(FAMILY) -p $(PARTNAME) -x $(DIR)/$(XDC) 2>&1 > /dev/null
+	$(SILENT)mkdir -p $(GEN_SYMBIFLOW_DIR)
+	$(SILENT)echo -e "[$(_GREEN_BOLD)Running Synthesys$(_RESET_COLOR)]"
+	$(SILENT)cd $(GEN_SYMBIFLOW_DIR) && symbiflow_synth -t top -v $(addprefix $(DIR)/$(SRC_DIR)/, $(V_SRC)) $(addprefix $(DIR)/, $(wildcard $(GEN_VERILOG_DIR)/*.v)) -d $(FAMILY) -p $(PARTNAME) -x $(DIR)/$(XDC) 2>&1 > /dev/null
 
 $(_GEN_SYMBIFLOW_DIR)/top.net: GEN_SYMBIFLOW_DIR := $(_GEN_SYMBIFLOW_DIR)
 $(_GEN_SYMBIFLOW_DIR)/top.net: DEVICE := $(LOCAL_DEVICE)
 $(_GEN_SYMBIFLOW_DIR)/top.net: $(_GEN_SYMBIFLOW_DIR)/top.eblif $(THIS_FILE)
-	@mkdir -p $(GEN_SYMBIFLOW_DIR)
-	@echo -e "[$(_GREEN_BOLD)Pack netlist$(_RESET_COLOR)]"
-	@cd $(GEN_SYMBIFLOW_DIR) && symbiflow_pack -e top.eblif -d $(DEVICE) 2>&1 > /dev/null
+	$(SILENT)mkdir -p $(GEN_SYMBIFLOW_DIR)
+	$(SILENT)echo -e "[$(_GREEN_BOLD)Pack netlist$(_RESET_COLOR)]"
+	$(SILENT)cd $(GEN_SYMBIFLOW_DIR) && symbiflow_pack -e top.eblif -d $(DEVICE) 2>&1 > /dev/null
 
 $(_GEN_SYMBIFLOW_DIR)/top.place: GEN_SYMBIFLOW_DIR := $(_GEN_SYMBIFLOW_DIR)
 $(_GEN_SYMBIFLOW_DIR)/top.place: DEVICE := $(LOCAL_DEVICE)
 $(_GEN_SYMBIFLOW_DIR)/top.place: PARTNAME := $(LOCAL_PARTNAME)
 $(_GEN_SYMBIFLOW_DIR)/top.place: $(_GEN_SYMBIFLOW_DIR)/top.net $(THIS_FILE)
-	@mkdir -p $(GEN_SYMBIFLOW_DIR)
-	@echo -e "[$(_GREEN_BOLD)Runnig place$(_RESET_COLOR)]"
-	@cd $(GEN_SYMBIFLOW_DIR) && symbiflow_place -e top.eblif -d $(DEVICE) -n top.net -P $(PARTNAME) 2>&1 > /dev/null
+	$(SILENT)mkdir -p $(GEN_SYMBIFLOW_DIR)
+	$(SILENT)echo -e "[$(_GREEN_BOLD)Runnig place$(_RESET_COLOR)]"
+	$(SILENT)cd $(GEN_SYMBIFLOW_DIR) && symbiflow_place -e top.eblif -d $(DEVICE) -n top.net -P $(PARTNAME) 2>&1 > /dev/null
 
 $(_GEN_SYMBIFLOW_DIR)/top.route: GEN_SYMBIFLOW_DIR := $(_GEN_SYMBIFLOW_DIR)
 $(_GEN_SYMBIFLOW_DIR)/top.route: DEVICE := $(LOCAL_DEVICE)
 $(_GEN_SYMBIFLOW_DIR)/top.route: $(_GEN_SYMBIFLOW_DIR)/top.place $(THIS_FILE)
-	@mkdir -p $(GEN_SYMBIFLOW_DIR)
-	@echo -e "[$(_GREEN_BOLD)Runnig route$(_RESET_COLOR)]"
-	@cd $(GEN_SYMBIFLOW_DIR) && symbiflow_route -e top.eblif -d $(DEVICE) 2>&1 > /dev/null
+	$(SILENT)mkdir -p $(GEN_SYMBIFLOW_DIR)
+	$(SILENT)echo -e "[$(_GREEN_BOLD)Runnig route$(_RESET_COLOR)]"
+	$(SILENT)cd $(GEN_SYMBIFLOW_DIR) && symbiflow_route -e top.eblif -d $(DEVICE) 2>&1 > /dev/null
 
 $(_GEN_SYMBIFLOW_DIR)/top.fasm: GEN_SYMBIFLOW_DIR := $(_GEN_SYMBIFLOW_DIR)
 $(_GEN_SYMBIFLOW_DIR)/top.fasm: DEVICE := $(LOCAL_DEVICE)
 $(_GEN_SYMBIFLOW_DIR)/top.fasm: $(_GEN_SYMBIFLOW_DIR)/top.route $(THIS_FILE)
-	@mkdir -p $(GEN_SYMBIFLOW_DIR)
-	@echo -e "[$(_GREEN_BOLD)Generating fasm$(_RESET_COLOR)]"
-	@cd $(GEN_SYMBIFLOW_DIR) && symbiflow_write_fasm -e top.eblif -d $(DEVICE) 2>&1 > /dev/null
+	$(SILENT)mkdir -p $(GEN_SYMBIFLOW_DIR)
+	$(SILENT)echo -e "[$(_GREEN_BOLD)Generating fasm$(_RESET_COLOR)]"
+	$(SILENT)cd $(GEN_SYMBIFLOW_DIR) && symbiflow_write_fasm -e top.eblif -d $(DEVICE) 2>&1 > /dev/null
 
 $(_GEN_SYMBIFLOW_DIR)/top.bit: GEN_SYMBIFLOW_DIR := $(_GEN_SYMBIFLOW_DIR)
 $(_GEN_SYMBIFLOW_DIR)/top.bit: FAMILY := $(LOCAL_FAMILY)
 $(_GEN_SYMBIFLOW_DIR)/top.bit: PARTNAME := $(LOCAL_PARTNAME)
 $(_GEN_SYMBIFLOW_DIR)/top.bit: $(_GEN_SYMBIFLOW_DIR)/top.fasm $(THIS_FILE)
-	@mkdir -p $(GEN_SYMBIFLOW_DIR)
-	@echo -e "[$(_GREEN_BOLD)Generating bitstream$(_RESET_COLOR)]"
-	@cd $(GEN_SYMBIFLOW_DIR) && symbiflow_write_bitstream -d $(FAMILY) -f top.fasm -p $(PARTNAME) -b top.bit 2>&1 > /dev/null
+	$(SILENT)mkdir -p $(GEN_SYMBIFLOW_DIR)
+	$(SILENT)echo -e "[$(_GREEN_BOLD)Generating bitstream$(_RESET_COLOR)]"
+	$(SILENT)cd $(GEN_SYMBIFLOW_DIR) && symbiflow_write_bitstream -d $(FAMILY) -f top.fasm -p $(PARTNAME) -b top.bit 2>&1 > /dev/null
 
 $(_BITSTREAM): $(_GEN_SYMBIFLOW_DIR)/top.bit
-	@cp $^ $@
+	$(SILENT)cp $^ $@
 
 $(LOCAL_NAME): $(_BITSTREAM)
 .PHONY: $(LOCAL_NAME)
 
 flash_$(LOCAL_NAME): NAME := $(LOCAL_NAME)
 flash_$(LOCAL_NAME): $(_BITSTREAM)
-	@echo -e "[$(_GREEN_BOLD)Flashing board -> $(NAME).bit$(_RESET_COLOR)]"
-	@vivado -mode batch -source flash.tcl -nojournal -nolog -tclargs $<
+	$(SILENT)echo -e "[$(_GREEN_BOLD)Flashing board -> $(NAME).bit$(_RESET_COLOR)]"
+	$(SILENT)vivado -mode batch -source flash.tcl -nojournal -nolog -tclargs $<
 .PHONY: flash_$(LOCAL_NAME)
 
 bsv_$(LOCAL_NAME): $(_BLUESPEC_DUMMY_MARKER)

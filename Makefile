@@ -15,6 +15,8 @@ _RESET_COLOR := \e[39;0m
 # targets
 _ALL_TARGETS =
 
+SILENT := @
+
 define current-dir
 $(abspath $(strip $(patsubst %/, %, $(dir $(lastword $(MAKEFILE_LIST))))))
 endef
@@ -22,7 +24,7 @@ endef
 all: all_targets
 
 clean:
-	@rm -rf $(_TARGET_DIR)
+	$(SILENT)rm -rf $(_TARGET_DIR)
 
 .PHONY: all flash clean
 
