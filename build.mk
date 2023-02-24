@@ -27,6 +27,8 @@ LOCAL_NAME := cpu_tests
 LOCAL_SRC_DIR := cpu
 LOCAL_BSV_SRC := \
     Cpu.bsv \
+    Alu.bsv \
+    RegisterFile.bsv \
     CpuMemory.bsv \
     Types.bsv
 

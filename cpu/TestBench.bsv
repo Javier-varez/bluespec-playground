@@ -2,6 +2,8 @@ package TestBench;
 
 import Assert::*;
 import Cpu::*;
+import RegisterFile::*;
+import Alu::*;
 import Types::*;
 import CpuMemory::*;
 
@@ -30,7 +32,6 @@ module mkTestBench (Empty);
 
     Memory#(1024) memory <- mkDistributedMemory();
 
-    ProgramCounter pc <- mkProgramCounter();
 
     rule rl_write_reg if (status == WriteReg);
         dynamicAssert(reg_file.read_port1(0) == 'h0, "Initial value is not correct");
@@ -45,10 +46,6 @@ module mkTestBench (Empty);
         let res <- memory.request(MemRequest{ op: Store, address: 0, data: 'h12345678});
         dynamicAssert(res == 0, "Invalid return value from memory store");
 
-        let pcVal = pc.read();
-        dynamicAssert(pcVal == 0, "Invalid return value from pc");
-        pc.write(pcVal + 1);
-
         status <= ReadReg;
     endrule
 
@@ -58,9 +55,6 @@ module mkTestBench (Empty);
 
         Word res <- memory.request(MemRequest{ op: Load, address: 0, data: 'h0});
         dynamicAssert(res == 'h12345678, "Memory was not written");
-
-        let pcVal = pc.read();
-        dynamicAssert(pcVal == 1, "Invalid return value from pc");
 
         $display("Tests done!!");
         $finish;
