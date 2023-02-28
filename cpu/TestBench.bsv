@@ -6,6 +6,7 @@ import RegisterFile::*;
 import Alu::*;
 import Types::*;
 import CpuMemory::*;
+import Decoder::*;
 
 typedef enum { ReadReg, WriteReg } Status deriving(Eq, Bits);
 
