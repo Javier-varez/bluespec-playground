@@ -5,7 +5,6 @@ import Cpu::*;
 import RegisterFile::*;
 import Alu::*;
 import Types::*;
-import CpuMemory::*;
 import Decoder::*;
 
 typedef enum { ReadReg, WriteReg } Status deriving(Eq, Bits);
@@ -31,9 +30,6 @@ module mkTestBench (Empty);
     RegFile#(32, Word, RegIndex) reg_file <- mkRegFile();
     Reg#(Status) status <- mkReg(WriteReg);
 
-    Memory#(1024) memory <- mkDistributedMemory();
-
-
     rule rl_write_reg if (status == WriteReg);
         dynamicAssert(reg_file.read_port1(0) == 'h0, "Initial value is not correct");
         dynamicAssert(reg_file.read_port2(0) == 'h0, "Initial value is not correct");
@@ -44,18 +40,12 @@ module mkTestBench (Empty);
 
         reg_file.write_port(1, 123);
 
-        let res <- memory.request(MemRequest{ op: Store, address: 0, data: 'h12345678});
-        dynamicAssert(res == 0, "Invalid return value from memory store");
-
         status <= ReadReg;
     endrule
 
     rule rl_read_reg if (status == ReadReg);
         dynamicAssert(reg_file.read_port1(1) == 123, "Reg 1 was not written");
         dynamicAssert(reg_file.read_port2(1) == 123, "Reg 1 was not written");
-
-        Word res <- memory.request(MemRequest{ op: Load, address: 0, data: 'h0});
-        dynamicAssert(res == 'h12345678, "Memory was not written");
 
         $display("Tests done!!");
         $finish;

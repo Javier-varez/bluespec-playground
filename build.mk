@@ -29,7 +29,7 @@ LOCAL_BSV_SRC := \
     Cpu.bsv \
     Alu.bsv \
     RegisterFile.bsv \
-    CpuMemory.bsv \
+    CoreMemory.bsv \
     Decoder.bsv \
     Types.bsv
 
@@ -50,3 +50,17 @@ LOCAL_BSV_TB := \
     DecoderTestBench.bsv
 
 include $(BUILD_BLUESIM_TEST)
+
+include $(CLEAR_VARS)
+LOCAL_NAME := memory_tests
+
+LOCAL_SRC_DIR := cpu
+LOCAL_BSV_SRC := \
+    CoreMemory.bsv \
+    Types.bsv
+
+LOCAL_BSV_TB := \
+    CoreMemoryTestBench.bsv
+
+include $(BUILD_BLUESIM_TEST)
+
