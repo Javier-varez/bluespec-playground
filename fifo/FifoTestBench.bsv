@@ -7,7 +7,7 @@ import Fifo::*;
 module mkTestBench (Empty);
     Reg#(Bit#(8)) step <- mkReg(0);
 
-    Fifo fifo <- mkFifo();
+    Fifo#(Bit#(32)) fifo <- mkFifo();
 
     rule keep_stepping;
         step <= step + 1;

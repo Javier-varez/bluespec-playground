@@ -1,16 +1,16 @@
 package Fifo;
 
-interface Fifo;
-    method Action enq(Bit#(32) v);
+interface Fifo#(type t);
+    method Action enq(t v);
     method Action deq();
-    method Bit#(32) first();
+    method t first();
 endinterface
 
-module mkFifo(Fifo);
-    Reg#(Bit#(32)) value <- mkReg(0);
+module mkFifo(Fifo#(t)) provisos(Bits#(t, sz));
+    Reg#(t) value <- mkRegU();
     Reg#(Bool) valid[2] <- mkCReg(2, False);
 
-    method Action enq(Bit#(32) v) if (!valid[1]);
+    method Action enq(t v) if (!valid[1]);
         value <= v;
         valid[1] <= True;
     endmethod
@@ -19,7 +19,7 @@ module mkFifo(Fifo);
         valid[0] <= False;
     endmethod
 
-    method Bit#(32) first() if (valid[0]);
+    method t first() if (valid[0]);
         return value;
     endmethod
 endmodule
