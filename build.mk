@@ -64,3 +64,14 @@ LOCAL_BSV_TB := \
 
 include $(BUILD_BLUESIM_TEST)
 
+include $(CLEAR_VARS)
+LOCAL_NAME := fifo_tests
+
+LOCAL_SRC_DIR := fifo
+LOCAL_BSV_SRC := \
+    Fifo.bsv
+
+LOCAL_BSV_TB := \
+    FifoTestBench.bsv
+
+include $(BUILD_BLUESIM_TEST)
