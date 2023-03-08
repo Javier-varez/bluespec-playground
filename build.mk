@@ -65,6 +65,32 @@ LOCAL_BSV_TB := \
 include $(BUILD_BLUESIM_TEST)
 
 include $(CLEAR_VARS)
+LOCAL_NAME := register_file_tests
+
+LOCAL_SRC_DIR := cpu
+LOCAL_BSV_SRC := \
+    RegisterFile.bsv \
+    Types.bsv
+
+LOCAL_BSV_TB := \
+    RegisterFileTestBench.bsv
+
+include $(BUILD_BLUESIM_TEST)
+
+include $(CLEAR_VARS)
+LOCAL_NAME := alu_tests
+
+LOCAL_SRC_DIR := cpu
+LOCAL_BSV_SRC := \
+    Alu.bsv \
+    Types.bsv
+
+LOCAL_BSV_TB := \
+    AluTestBench.bsv
+
+include $(BUILD_BLUESIM_TEST)
+
+include $(CLEAR_VARS)
 LOCAL_NAME := fifo_tests
 
 LOCAL_SRC_DIR := fifo

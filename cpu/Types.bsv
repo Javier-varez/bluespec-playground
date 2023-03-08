@@ -50,4 +50,9 @@ typedef enum { Rtype, Itype, Stype, Btype, Utype, Jtype } InstrFormat deriving(B
 
 typedef enum { Add, Sub, Sll, Slt, Sltu, Xor, Srl, Sra, Or, And } AluOp deriving(Bits, Eq);
 
+typedef struct {
+    AluOp alu_op;
+} ControlSignals deriving(Bits, Eq);
+
+
 endpackage

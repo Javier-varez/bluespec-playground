@@ -135,4 +135,10 @@ function DecodedInstruction decodeInstruction(Instruction instruction);
     endcase
 endfunction
 
+function ControlSignals generateControlSignals(DecodedInstruction instruction);
+    return ControlSignals {
+        alu_op: Add
+    };
+endfunction
+
 endpackage
