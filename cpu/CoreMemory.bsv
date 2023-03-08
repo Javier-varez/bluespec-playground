@@ -3,6 +3,7 @@ package CoreMemory;
 import Assert::*;
 import Vector::*;
 import Types::*;
+import RegFile::*;
 
 typedef enum { Load, Store } MemOp deriving(Bits, Eq);
 
@@ -21,8 +22,9 @@ interface Memory#(numeric type size);
 endinterface
 
 // This one is an implementation of distributed memory in the form of registers in the FPGA
-module mkDistributedMemory(Memory#(size));
-    Vector#(size, Reg#(Word)) mem_array <- replicateM(mkReg(0));
+module mkDistributedMemory#(String file) (Memory#(sizeType));
+    Address addrSize = fromInteger(valueOf(sizeType));
+    RegFile#(Address, Word) mem_array <- mkRegFileLoad(file, 0, addrSize - 1);
 
     Reg#(Word) out_buf <- mkReg(0);
     Reg#(Bool) valid[2] <- mkCReg(2, False);
@@ -31,12 +33,12 @@ module mkDistributedMemory(Memory#(size));
         case (r.op) matches
             Load:
                 begin
-                    out_buf <= mem_array[r.address];
+                    out_buf <= mem_array.sub(r.address);
                     valid[1] <= True;
                 end
             Store:
                 begin
-                    mem_array[r.address] <= r.data;
+                    mem_array.upd(r.address, r.data);
                 end
         endcase
     endmethod

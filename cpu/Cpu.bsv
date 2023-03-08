@@ -21,11 +21,11 @@ typedef Memory#(1024) InstMemory;
 typedef Memory#(1024) DataMemory;
 
 (* synthesize *)
-module mkCpu(Empty);
+module mkCpu#(string inst_file, string data_file)(Empty);
     Pc pc <- mkReg(0);
     CpuRegFile register_file <- mkRegFile();
-    InstMemory inst_memory <- mkDistributedMemory();
-    DataMemory data_memory <- mkDistributedMemory();
+    InstMemory inst_memory <- mkDistributedMemory(inst_file);
+    DataMemory data_memory <- mkDistributedMemory(data_file);
 
     rule readInstMem;
         inst_memory.request(MemRequest { op: Load, address: pc, data: ? });
