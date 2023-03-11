@@ -6,6 +6,7 @@ typedef Bit#(8) Byte;
 typedef Bit#(5) RegIndex;
 
 typedef Bit#(32) Address;
+typedef Bit#(30) WordAddress;
 typedef Bit#(32) Instruction;
 
 typedef Bit#(7) Funct7;
@@ -50,9 +51,10 @@ typedef enum { Rtype, Itype, Stype, Btype, Utype, Jtype } InstrFormat deriving(B
 
 typedef enum { Add, Sub, Sll, Slt, Sltu, Xor, Srl, Sra, Or, And } AluOp deriving(Bits, Eq);
 
+typedef enum { Load, Store } MemOp deriving(Bits, Eq);
+
 typedef struct {
     AluOp alu_op;
 } ControlSignals deriving(Bits, Eq);
-
 
 endpackage
