@@ -1,6 +1,7 @@
 .section .bss._stack
 
-.skip 1024
+.align 4
+.skip 256
 _stack_end:
 
 .section .text._start

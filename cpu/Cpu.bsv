@@ -19,8 +19,7 @@ interface Cpu;
 endinterface
 
 typedef RegFile#(32, Word, RegIndex) CpuRegFile;
-typedef Memory#(1024) InstMemory;
-typedef Memory#(1024) DataMemory;
+typedef TwoPortMemory#(1024) InstDataMemory;
 
 typedef enum { Fetch, Decode, Execute, MemAccess, WriteBack } CpuState deriving(Eq, Bits);
 
@@ -35,11 +34,10 @@ function Word signExtendMemResult(AccessSize access_size, Word word);
     endcase
 endfunction
 
-module mkCpu#(String inst_file, String data_file)(Empty);
+module mkCpu#(String mem_file)(Empty);
     Reg#(Address) pc <- mkReg(0);
     CpuRegFile register_file <- mkRegFile();
-    InstMemory inst_memory <- mkMemory(inst_file);
-    DataMemory data_memory <- mkMemory(data_file);
+    InstDataMemory memory <- mkTwoPortMemory(mem_file);
 
     Reg#(CpuState) state <- mkReg(Fetch);
     Reg#(DecodedInstruction) decoded_instruction <- mkRegU();
@@ -50,12 +48,12 @@ module mkCpu#(String inst_file, String data_file)(Empty);
     Reg#(Word) next_pc <- mkRegU();
 
     rule fetch if (state == Fetch);
-        inst_memory.request(MemRequest { op: Load, size: Word, address: pc, data: ? });
+        memory.load_request_1(LoadRequest { size: Word, address: pc });
         state <= Decode;
     endrule
 
     rule decode if (state == Decode);
-        let instruction <- inst_memory.response();
+        let instruction <- memory.load_result_1();
 
         let dec = decodeInstruction(instruction);
         let ctrl = generateControlSignals(dec);
@@ -108,12 +106,17 @@ module mkCpu#(String inst_file, String data_file)(Empty);
     endrule
 
     rule mem_access if (state == MemAccess);
-        data_memory.request(MemRequest {
-            op: control_signals.mem_op_type,
-            size: control_signals.mem_access_size,
-            address: alu_result,
-            data: rs2_val
-        });
+        if (control_signals.mem_op_type == Load)
+            memory.load_request_2(LoadRequest {
+                size: control_signals.mem_access_size,
+                address: alu_result
+            });
+        else
+            memory.store_request(StoreRequest {
+                size: control_signals.mem_access_size,
+                address: alu_result,
+                data: rs2_val
+            });
 
         if (control_signals.write_back)
             state <= WriteBack;
@@ -126,9 +129,10 @@ module mkCpu#(String inst_file, String data_file)(Empty);
 
     rule write_back if (state == WriteBack);
         let val;
+
         if (control_signals.mem_op)
         begin
-            let mem_result <- data_memory.response();
+            let mem_result <- memory.load_result_2();
             if (control_signals.mem_sign_extend)
                 val = signExtendMemResult(control_signals.mem_access_size, mem_result);
             else

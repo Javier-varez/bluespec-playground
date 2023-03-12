@@ -6,7 +6,7 @@ import Cpu::*;
 (* synthesize *)
 module mkTestBench (Empty);
     Reg#(Bit#(32)) count <- mkReg(0);
-    Empty cpu <- mkCpu("cpu/data/inst_mem.txt", "cpu/data/data_mem.txt");
+    Empty cpu <- mkCpu("cpu/data/inst_mem.txt");
 
     rule counter;
         count <= count + 1;
