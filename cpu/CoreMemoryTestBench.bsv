@@ -9,7 +9,8 @@ module mkTestBench (Empty);
     Reg#(Bit#(8)) step <- mkReg(0);
 
     // 32 words of memory
-    Memory#(32) memory <- mkDistributedMemory("cpu/memory.txt");
+    Memory#(32) memory <- mkMemory("cpu/memory.txt");
+    TwoPortMemory#(32) two_port_memory <- mkTwoPortMemory("cpu/memory.txt");
 
     rule keep_stepping;
         step <= step + 1;
@@ -19,8 +20,44 @@ module mkTestBench (Empty);
         memory.request(MemRequest{ op: Store, size: Word, address: 4, data: 'h12345678 });
     endrule
 
+    rule step0_store_two_port if (step == 0);
+        two_port_memory.store_request(StoreRequest{ size: Word, address: 4, data: 'h12345678 });
+    endrule
+
+    rule step0_load_two_port_1 if (step == 0);
+        two_port_memory.load_request_1(LoadRequest{ size: Word, address: 4 });
+    endrule
+
+    rule step0_load_two_port_2 if (step == 0);
+        two_port_memory.load_request_2(LoadRequest{ size: Word, address: 28 });
+    endrule
+
     rule step1_load_issue if (step == 1);
         memory.request(MemRequest{ op: Load, size: Word, address: 4, data: ? });
+    endrule
+
+    rule step1_store_two_port if (step == 1);
+        two_port_memory.store_request(StoreRequest{ size: Word, address: 28, data: 'h00ffaa55 });
+    endrule
+
+    rule step1_load_response_two_port_1 if (step == 1);
+        let rsp <- two_port_memory.load_result_1();
+        $display("twoPortW[4] = %x", rsp);
+        dynamicAssert(rsp == 'h0, "Invalid value at [4]");
+    endrule
+
+    rule step1_load_response_two_port_2 if (step == 1);
+        let rsp <- two_port_memory.load_result_2();
+        $display("twoPortW[28] = %x", rsp);
+        dynamicAssert(rsp == 'hDEADC0DE, "Invalid value at [28]");
+    endrule
+
+    rule step1_load_two_port_1 if (step == 1);
+        two_port_memory.load_request_1(LoadRequest{ size: Word, address: 4 });
+    endrule
+
+    rule step1_load_two_port_2 if (step == 1);
+        two_port_memory.load_request_2(LoadRequest{ size: Word, address: 28 });
     endrule
 
     rule step2_load_issue if (step == 2);
@@ -33,6 +70,26 @@ module mkTestBench (Empty);
         dynamicAssert(rsp == 'h12345678, "Invalid value at [3]");
     endrule
 
+    rule step2_load_response_two_port_1 if (step == 2);
+        let rsp <- two_port_memory.load_result_1();
+        $display("twoPortW[4] = %x", rsp);
+        dynamicAssert(rsp == 'h12345678, "Invalid value at [4]");
+    endrule
+
+    rule step2_load_response_two_port_2 if (step == 2);
+        let rsp <- two_port_memory.load_result_2();
+        $display("twoPortW[28] = %x", rsp);
+        dynamicAssert(rsp == 'hDEADC0DE, "Invalid value at [28]");
+    endrule
+
+    rule step2_load_two_port_1 if (step == 2);
+        two_port_memory.load_request_1(LoadRequest{ size: Word, address: 4 });
+    endrule
+
+    rule step2_load_two_port_2 if (step == 2);
+        two_port_memory.load_request_2(LoadRequest{ size: Word, address: 28 });
+    endrule
+
     rule step3_load_response if (step == 3);
         let rsp <- memory.response();
         $display("mem[28] = %x", rsp);
@@ -41,6 +98,18 @@ module mkTestBench (Empty);
 
     rule step3_load_issue if (step == 3);
         memory.request(MemRequest{ op: Load, size: HalfWord, address: 28, data: ? });
+    endrule
+
+    rule step3_load_response_two_port_1 if (step == 3);
+        let rsp <- two_port_memory.load_result_1();
+        $display("twoPortW[4] = %x", rsp);
+        dynamicAssert(rsp == 'h12345678, "Invalid value at [4]");
+    endrule
+
+    rule step3_load_response_two_port_2 if (step == 3);
+        let rsp <- two_port_memory.load_result_2();
+        $display("twoPortW[28] = %x", rsp);
+        dynamicAssert(rsp == 'h00ffaa55, "Invalid value at [28]");
     endrule
 
     rule step4_load_response if (step == 4);

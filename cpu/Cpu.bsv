@@ -38,8 +38,8 @@ endfunction
 module mkCpu#(String inst_file, String data_file)(Empty);
     Reg#(Address) pc <- mkReg(0);
     CpuRegFile register_file <- mkRegFile();
-    InstMemory inst_memory <- mkDistributedMemory(inst_file);
-    DataMemory data_memory <- mkDistributedMemory(data_file);
+    InstMemory inst_memory <- mkMemory(inst_file);
+    DataMemory data_memory <- mkMemory(data_file);
 
     Reg#(CpuState) state <- mkReg(Fetch);
     Reg#(DecodedInstruction) decoded_instruction <- mkRegU();
