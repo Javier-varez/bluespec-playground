@@ -6,7 +6,7 @@ function Word alu(Word rs1, Word rs2, AluOp op);
     case (op) matches
         Add: return rs1 + rs2;
         Sub: return rs1 - rs2;
-        Sll: return rs1 << rs2;
+        Sll: return rs1 << rs2[4:0];
         Slt:
             begin
                 Int#(32) signed_rs1 = unpack(rs1);
@@ -20,11 +20,11 @@ function Word alu(Word rs1, Word rs2, AluOp op);
                 return unsigned_rs1 < unsigned_rs2 ? 1 : 0;
             end
         Xor: return rs1 ^ rs2;
-        Srl: return zeroExtend(rs1 >> rs2);
+        Srl: return zeroExtend(rs1 >> rs2[4:0]);
         Sra:
             begin
                 Int#(32) signed_rs1 = unpack(rs1);
-                return pack(signed_rs1 >> rs2);
+                return pack(signed_rs1 >> rs2[4:0]);
             end
         Or: return rs1 | rs2;
         And: return rs1 & rs2;

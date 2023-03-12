@@ -1,8 +1,11 @@
 package Cpu;
 
-import Types::*;
-import RegisterFile::*;
+import Alu::*;
+import BranchAlu::*;
 import CoreMemory::*;
+import Decoder::*;
+import RegisterFile::*;
+import Types::*;
 
 interface Cpu;
     (* prefix = "" *)
@@ -15,50 +18,113 @@ interface Cpu;
     method Bit#(1) uart_tx;
 endinterface
 
-typedef Reg#(Bit#(32)) Pc;
 typedef RegFile#(32, Word, RegIndex) CpuRegFile;
 typedef Memory#(1024) InstMemory;
 typedef Memory#(1024) DataMemory;
 
-(* synthesize *)
-module mkCpu#(string inst_file, string data_file)(Empty);
-    Pc pc <- mkReg(0);
+typedef enum { Fetch, Decode, Execute, MemAccess, WriteBack } CpuState deriving(Eq, Bits);
+
+module mkCpu#(String inst_file, String data_file)(Empty);
+    Reg#(Address) pc <- mkReg(0);
     CpuRegFile register_file <- mkRegFile();
     InstMemory inst_memory <- mkDistributedMemory(inst_file);
     DataMemory data_memory <- mkDistributedMemory(data_file);
 
-    rule readInstMem;
-        inst_memory.request(MemRequest { op: Load, address: pc, data: ? });
+    Reg#(CpuState) state <- mkReg(Fetch);
+    Reg#(DecodedInstruction) decoded_instruction <- mkRegU();
+    Reg#(ControlSignals) control_signals <- mkRegU();
+    Reg#(Word) alu_result <- mkRegU();
+    Reg#(Word) rs1_val <- mkRegU();
+    Reg#(Word) rs2_val <- mkRegU();
+    Reg#(Word) next_pc <- mkRegU();
+
+    rule fetch if (state == Fetch);
+        inst_memory.request(MemRequest { op: Load, size: Word, address: pc, data: ? });
+        state <= Decode;
     endrule
 
-    rule execute;
-        Word instruction <= inst_memory.response();
-        DecodedInstruction dec_inst <= decodeInstruction(instruction);
-        ControlSignals control_signals <= generateControlSignals(dec_inst);
+    rule decode if (state == Decode);
+        let instruction <- inst_memory.response();
 
-        let rs1 <= register_file.read_port1(dec_inst.rs1);
-        let rs2 <= register_file.read_port2(dec_inst.rs2);
+        let dec = decodeInstruction(instruction);
+        let ctrl = generateControlSignals(dec);
 
-        let op2 <= rs1;
-        if control_signals.imm_source
-            let op2 <= dec_inst.imm;
+        decoded_instruction <= dec;
+        control_signals <= ctrl;
+        state <= Execute;
+    endrule
+
+    rule execute if (state == Execute);
+        let rs1 = register_file.read_port1(decoded_instruction.rs1);
+        let rs2 = register_file.read_port2(decoded_instruction.rs2);
+        rs1_val <= rs1;
+        rs2_val <= rs2;
+
+        let op1;
+        let op2;
+
+        if (control_signals.pc_source)
+            op1 = pc;
         else
-            let op2 <= rs2;
+            op1 = rs1;
+
+        if (control_signals.imm_source)
+            op2 = decoded_instruction.imm;
+        else
+            op2 = rs2;
 
         // Instantiate ALU
-        let aluResult = alu(op1, op2, control_signals.alu_op)
+        let next_alu_result = alu(op1, op2, control_signals.alu_op);
+        alu_result <= next_alu_result;
 
-        // Mem access
-        if control_signals.mem_op
-        begin
-            // TODO: Implement
-        end
+        // Instantiate Branch ALU
+        let branch_taken = branchAlu(rs1, rs2, control_signals.branch_alu_op);
 
-        // Write back
-        if control_signals.write_back
-            register_file.write_port(aluResult);
+        if (control_signals.branch && branch_taken)
+            next_pc <= next_alu_result;
+        else
+            next_pc <= pc + 4;
 
-        pc <= pc + 4;
+        if (control_signals.mem_op)
+            state <= MemAccess;
+        else if (control_signals.write_back)
+            state <= WriteBack;
+        else
+            begin
+                state <= Fetch;
+                pc <= pc + 4;
+            end
+    endrule
+
+    rule mem_access if (state == MemAccess);
+        data_memory.request(MemRequest {
+            op: control_signals.mem_op_type,
+            size: Word, // TODO: Support accesses of other sizes
+            address: alu_result,
+            data: rs2_val
+        });
+
+        if (control_signals.write_back)
+            state <= WriteBack;
+        else
+            begin
+                state <= Fetch;
+                pc <= next_pc;
+            end
+    endrule
+
+    rule write_back if (state == WriteBack);
+        let val;
+        if (control_signals.mem_op)
+            val <- data_memory.response();
+        else if (control_signals.link)
+            val = pc + 4;
+        else
+            val = alu_result;
+
+        register_file.write_port(decoded_instruction.rd, val);
+        state <= Fetch;
+        pc <= next_pc;
     endrule
 
 endmodule

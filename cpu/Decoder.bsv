@@ -16,8 +16,6 @@ function InstrFormat instrFormat(Opcode opcode);
             return Utype;
         OpImm32:
             return Itype;
-        OpImm32:
-            return Itype;
         Store:
             return Stype;
         StoreFP:
@@ -112,7 +110,7 @@ function DecodedInstruction decodeInstruction(Instruction instruction);
                 return DecodedInstruction {
                     opcode: opcode,
                     rd: unpack(instruction[11:7]),
-                    rs1: ?,
+                    rs1: 5'b0,  // Use reg 0 to add imm
                     rs2: ?,
                     funct3: ?,
                     funct7: ?,
@@ -135,10 +133,174 @@ function DecodedInstruction decodeInstruction(Instruction instruction);
     endcase
 endfunction
 
+function AluOp decodeOpInstAluOp(DecodedInstruction instruction);
+    case (instruction.funct3) matches
+        3'b000:
+            return Add;
+        3'b001:
+            return Sll;
+        3'b010:
+            return Slt;
+        3'b011:
+            return Sltu;
+        3'b100:
+            return Xor;
+        3'b101:
+            if (instruction.funct7[5] == 1'b1)
+                return Sra;
+            else
+                return Srl;
+        3'b110:
+            return Or;
+        3'b111:
+            return And;
+    endcase
+endfunction
+
+function BranchAluOp decodeBranchAluOp(Funct3 funct3);
+    case (funct3) matches
+        3'b000:
+            return Beq;
+        3'b001:
+            return Bne;
+        3'b100:
+            return Blt;
+        3'b101:
+            return Bge;
+        3'b110:
+            return Bltu;
+        3'b111:
+            return Bgeu;
+        default:
+            return ?;  // Anything goes
+    endcase
+endfunction
+
 function ControlSignals generateControlSignals(DecodedInstruction instruction);
-    return ControlSignals {
-        alu_op: Add
+    let def_control_signals = ControlSignals {
+        alu_op: Add,
+        imm_source: False,
+        mem_op: False,
+        mem_op_type: Load,
+        write_back: False,
+        branch: False,
+        link: False,
+        pc_source: False,
+        branch_alu_op: ?
     };
+
+    case (instruction.opcode) matches
+        Load:
+            return ControlSignals {
+                alu_op: Add,
+                imm_source: True,
+                mem_op: True,
+                mem_op_type: Load,
+                write_back: True,
+                branch: False,
+                link: False,
+                pc_source: False,
+                branch_alu_op: ?
+            };
+        Store:
+            return ControlSignals {
+                alu_op: Add,
+                imm_source: True,
+                mem_op: True,
+                mem_op_type: Store,
+                write_back: False,
+                branch: False,
+                link: False,
+                pc_source: False,
+                branch_alu_op: ?
+            };
+        OpImm:
+            return ControlSignals {
+                alu_op: decodeOpInstAluOp(instruction),
+                imm_source: True,
+                mem_op: False,
+                mem_op_type: ?,
+                write_back: True,
+                branch: False,
+                link: False,
+                pc_source: False,
+                branch_alu_op: ?
+            };
+        AuiPc:
+            return ControlSignals {
+                alu_op: Add,
+                imm_source: True,
+                mem_op: False,
+                mem_op_type: ?,
+                write_back: True,
+                branch: False,
+                link: False,
+                pc_source: True,
+                branch_alu_op: ?
+            };
+        Op:
+            return ControlSignals {
+                alu_op: decodeOpInstAluOp(instruction),
+                imm_source: False,
+                mem_op: False,
+                mem_op_type: ?,
+                write_back: True,
+                branch: False,
+                link: False,
+                pc_source: False,
+                branch_alu_op: ?
+            };
+        Lui:
+            return ControlSignals {
+                alu_op: Add,
+                imm_source: True,
+                mem_op: False,
+                mem_op_type: ?,
+                write_back: True,
+                branch: False,
+                link: False,
+                pc_source: False,
+                branch_alu_op: ?
+            };
+        Branch:
+            return ControlSignals {
+                alu_op: Add,
+                imm_source: True,
+                mem_op: False,
+                mem_op_type: ?,
+                write_back: True,
+                branch: True,
+                link: False,
+                pc_source: True,
+                branch_alu_op: decodeBranchAluOp(instruction.funct3)
+            };
+        Jalr:
+            return ControlSignals {
+                alu_op: Add,
+                imm_source: True,
+                mem_op: False,
+                mem_op_type: ?,
+                write_back: True,
+                branch: True,
+                link: True,
+                pc_source: False,
+                branch_alu_op: Always
+            };
+        Jal:
+            return ControlSignals {
+                alu_op: Add,
+                imm_source: True,
+                mem_op: False,
+                mem_op_type: ?,
+                write_back: True,
+                branch: True,
+                link: True,
+                pc_source: True,
+                branch_alu_op: Always
+            };
+        default:
+            return def_control_signals;
+    endcase
 endfunction
 
 endpackage

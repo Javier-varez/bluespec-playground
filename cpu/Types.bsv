@@ -50,11 +50,20 @@ typedef struct {
 typedef enum { Rtype, Itype, Stype, Btype, Utype, Jtype } InstrFormat deriving(Bits, Eq);
 
 typedef enum { Add, Sub, Sll, Slt, Sltu, Xor, Srl, Sra, Or, And } AluOp deriving(Bits, Eq);
+typedef enum { Always, Beq, Bne, Blt, Bge, Bltu, Bgeu } BranchAluOp deriving(Bits, Eq);
 
 typedef enum { Load, Store } MemOp deriving(Bits, Eq);
 
 typedef struct {
     AluOp alu_op;
+    Bool imm_source;
+    Bool mem_op;
+    MemOp mem_op_type;
+    Bool write_back;
+    Bool branch;
+    Bool link;
+    Bool pc_source;
+    BranchAluOp branch_alu_op;
 } ControlSignals deriving(Bits, Eq);
 
 endpackage
