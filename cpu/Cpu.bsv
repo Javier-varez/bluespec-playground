@@ -24,6 +24,17 @@ typedef Memory#(1024) DataMemory;
 
 typedef enum { Fetch, Decode, Execute, MemAccess, WriteBack } CpuState deriving(Eq, Bits);
 
+function Word signExtendMemResult(AccessSize access_size, Word word);
+    case (access_size) matches
+        Byte:
+            return signExtend(word[7:0]);
+        HalfWord:
+            return signExtend(word[15:0]);
+        Word:
+            return word;
+    endcase
+endfunction
+
 module mkCpu#(String inst_file, String data_file)(Empty);
     Reg#(Address) pc <- mkReg(0);
     CpuRegFile register_file <- mkRegFile();
@@ -99,7 +110,7 @@ module mkCpu#(String inst_file, String data_file)(Empty);
     rule mem_access if (state == MemAccess);
         data_memory.request(MemRequest {
             op: control_signals.mem_op_type,
-            size: Word, // TODO: Support accesses of other sizes
+            size: control_signals.mem_access_size,
             address: alu_result,
             data: rs2_val
         });
@@ -116,7 +127,13 @@ module mkCpu#(String inst_file, String data_file)(Empty);
     rule write_back if (state == WriteBack);
         let val;
         if (control_signals.mem_op)
-            val <- data_memory.response();
+        begin
+            let mem_result <- data_memory.response();
+            if (control_signals.mem_sign_extend)
+                val = signExtendMemResult(control_signals.mem_access_size, mem_result);
+            else
+                val = mem_result;
+        end
         else if (control_signals.link)
             val = pc + 4;
         else

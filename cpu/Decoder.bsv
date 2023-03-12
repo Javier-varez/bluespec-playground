@@ -176,12 +176,27 @@ function BranchAluOp decodeBranchAluOp(Funct3 funct3);
     endcase
 endfunction
 
+function AccessSize decodeMemAccessSize(Funct3 funct3);
+    case (funct3[1:0]) matches
+        2'b00:
+            return Byte;
+        2'b01:
+            return HalfWord;
+        2'b10:
+            return Word;
+        default:
+            return ?;  // Anything goes
+    endcase
+endfunction
+
 function ControlSignals generateControlSignals(DecodedInstruction instruction);
     let def_control_signals = ControlSignals {
         alu_op: Add,
         imm_source: False,
         mem_op: False,
         mem_op_type: Load,
+        mem_access_size: Word,
+        mem_sign_extend: False,
         write_back: False,
         branch: False,
         link: False,
@@ -196,6 +211,8 @@ function ControlSignals generateControlSignals(DecodedInstruction instruction);
                 imm_source: True,
                 mem_op: True,
                 mem_op_type: Load,
+                mem_access_size: decodeMemAccessSize(instruction.funct3),
+                mem_sign_extend: instruction.funct3[2] == 0,
                 write_back: True,
                 branch: False,
                 link: False,
@@ -208,6 +225,8 @@ function ControlSignals generateControlSignals(DecodedInstruction instruction);
                 imm_source: True,
                 mem_op: True,
                 mem_op_type: Store,
+                mem_access_size: decodeMemAccessSize(instruction.funct3),
+                mem_sign_extend: False,
                 write_back: False,
                 branch: False,
                 link: False,
@@ -220,6 +239,8 @@ function ControlSignals generateControlSignals(DecodedInstruction instruction);
                 imm_source: True,
                 mem_op: False,
                 mem_op_type: ?,
+                mem_access_size: ?,
+                mem_sign_extend: ?,
                 write_back: True,
                 branch: False,
                 link: False,
@@ -232,6 +253,8 @@ function ControlSignals generateControlSignals(DecodedInstruction instruction);
                 imm_source: True,
                 mem_op: False,
                 mem_op_type: ?,
+                mem_access_size: ?,
+                mem_sign_extend: ?,
                 write_back: True,
                 branch: False,
                 link: False,
@@ -244,6 +267,8 @@ function ControlSignals generateControlSignals(DecodedInstruction instruction);
                 imm_source: False,
                 mem_op: False,
                 mem_op_type: ?,
+                mem_access_size: ?,
+                mem_sign_extend: ?,
                 write_back: True,
                 branch: False,
                 link: False,
@@ -256,6 +281,8 @@ function ControlSignals generateControlSignals(DecodedInstruction instruction);
                 imm_source: True,
                 mem_op: False,
                 mem_op_type: ?,
+                mem_access_size: ?,
+                mem_sign_extend: ?,
                 write_back: True,
                 branch: False,
                 link: False,
@@ -268,6 +295,8 @@ function ControlSignals generateControlSignals(DecodedInstruction instruction);
                 imm_source: True,
                 mem_op: False,
                 mem_op_type: ?,
+                mem_access_size: ?,
+                mem_sign_extend: ?,
                 write_back: True,
                 branch: True,
                 link: False,
@@ -280,6 +309,8 @@ function ControlSignals generateControlSignals(DecodedInstruction instruction);
                 imm_source: True,
                 mem_op: False,
                 mem_op_type: ?,
+                mem_access_size: ?,
+                mem_sign_extend: ?,
                 write_back: True,
                 branch: True,
                 link: True,
@@ -292,6 +323,8 @@ function ControlSignals generateControlSignals(DecodedInstruction instruction);
                 imm_source: True,
                 mem_op: False,
                 mem_op_type: ?,
+                mem_access_size: ?,
+                mem_sign_extend: ?,
                 write_back: True,
                 branch: True,
                 link: True,

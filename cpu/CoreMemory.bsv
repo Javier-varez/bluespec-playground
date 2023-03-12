@@ -5,12 +5,6 @@ import Vector::*;
 import Types::*;
 import RegFile::*;
 
-typedef enum {
-    Byte,
-    HalfWord,
-    Word
-} AccessSize deriving(Bits, Eq);
-
 typedef struct {
     MemOp op;
     AccessSize size;

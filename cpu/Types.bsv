@@ -54,11 +54,19 @@ typedef enum { Always, Beq, Bne, Blt, Bge, Bltu, Bgeu } BranchAluOp deriving(Bit
 
 typedef enum { Load, Store } MemOp deriving(Bits, Eq);
 
+typedef enum {
+    Byte,
+    HalfWord,
+    Word
+} AccessSize deriving(Bits, Eq);
+
 typedef struct {
     AluOp alu_op;
     Bool imm_source;
     Bool mem_op;
     MemOp mem_op_type;
+    AccessSize mem_access_size;
+    Bool mem_sign_extend;
     Bool write_back;
     Bool branch;
     Bool link;
