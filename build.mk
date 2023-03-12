@@ -101,3 +101,5 @@ LOCAL_BSV_TB := \
     FifoTestBench.bsv
 
 include $(BUILD_BLUESIM_TEST)
+
+include $(LOCAL_DIR)/fw/build.mk
